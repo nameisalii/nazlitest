@@ -1,50 +1,76 @@
 <?php
-// Handle form submission
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Get redirect URL from form or default to index.html#contact
-    $redirect_url = filter_var($_POST['_next'] ?? 'index.html#contact', FILTER_SANITIZE_URL);
-
-    // Check honeypot field to filter spam
-    if (!empty($_POST['honeypot'])) {
-        header("Location: $redirect_url?error=" . urlencode("Spam detected"));
-        exit;
-    }
-
-    // Collect and sanitize form data
-    $name = filter_var($_POST['name'] ?? '', FILTER_SANITIZE_STRING);
-    $surname = filter_var($_POST['surname'] ?? '', FILTER_SANITIZE_STRING);
-    $email = filter_var($_POST['email'] ?? '', FILTER_SANITIZE_EMAIL);
-    $phone = filter_var($_POST['phone'] ?? '', FILTER_SANITIZE_STRING);
-    $info = filter_var($_POST['info'] ?? '', FILTER_SANITIZE_STRING);
-
-    // Validate required fields
-    if (empty($name) || empty($surname) || empty($email) || empty($phone) || empty($info)) {
-        header("Location: $redirect_url?error=" . urlencode("All fields are required."));
-        exit;
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        header("Location: $redirect_url?error=" . urlencode("Invalid email address."));
-        exit;
-    }
-
-    // Email settings
-    $to = "kazgutv@gmail.com";
-    $subject = "New Contact Form Submission from $name $surname";
-    $message = "Name: $name $surname\nEmail: $email\nPhone: $phone\nCleaning Details: $info";
-    $headers = "From: noreply@nazlicleaning.com\r\n";
-    $headers .= "Reply-To: $email\r\n";
-    $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-
-    // Send email
-    if (mail($to, $subject, $message, $headers)) {
-        header("Location: $redirect_url?success=" . urlencode("Thank you! Your submission has been sent. We'll contact you soon."));
-        exit;
-    } else {
-        header("Location: $redirect_url?error=" . urlencode("Failed to send the email. Please try again or contact us directly at kazgutv@gmail.com."));
-        exit;
-    }
-} else {
-    // Redirect if accessed directly
-    header("Location: index.html#contact?server_error=1");
+// --------------- 1. SECURITY & SPAM CHECKS ----------------
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Location: index.html');           // direct visits → home
     exit;
 }
-?>
+
+// Honeypot: if the invisible field was filled in, it’s a bot
+if (!empty($_POST['honeypot'])) {
+    header('Location: index.html#contact?error=Spam+detected');
+    exit;
+}
+
+// --------------- 2. SANITISE & VALIDATE INPUT -------------
+$fields = [
+    'name'    => FILTER_SANITIZE_SPECIAL_CHARS,
+    'surname' => FILTER_SANITIZE_SPECIAL_CHARS,
+    'email'   => FILTER_SANITIZE_EMAIL,
+    'phone'   => FILTER_SANITIZE_SPECIAL_CHARS,
+    'info'    => FILTER_SANITIZE_SPECIAL_CHARS,
+];
+$data = filter_input_array(INPUT_POST, $fields);
+
+if (
+    !$data['name']    || !$data['surname'] ||
+    !filter_var($data['email'], FILTER_VALIDATE_EMAIL) ||
+    !$data['phone']   || !$data['info']
+) {
+    header('Location: index.html#contact?error=Please+fill+in+all+fields+correctly');
+    exit;
+}
+
+// --------------- 3. BUILD THE E-MAIL ----------------------
+$to      = 'kazgutv@gmail.com';                     // <- your address
+$subject = 'New cleaning enquiry from website';
+
+$body  = "Name:     {$data['name']} {$data['surname']}\n";
+$body .= "Email:    {$data['email']}\n";
+$body .= "Phone:    {$data['phone']}\n\n";
+$body .= "Cleaning details:\n{$data['info']}\n";
+
+// --------------- 4. SEND VIA PHPMailer --------------------
+// Install once at the project root:
+//     composer require phpmailer/phpmailer
+require __DIR__ . '/vendor/autoload.php';
+
+$mail = new PHPMailer\PHPMailer\PHPMailer(true);
+
+try {
+    // (A) SMTP SETTINGS —  Replace with your provider settings
+    $mail->isSMTP();
+    $mail->Host       = 'smtp.gmail.com';
+    $mail->Port       = 587;
+    $mail->SMTPAuth   = true;
+    $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+    $mail->Username   = 'yourgmail@gmail.com';        // full address
+    $mail->Password   = 'APP-SPECIFIC-PASSWORD';      // NEVER reuse main pw
+
+    // (B) MESSAGE HEADERS
+    $mail->setFrom('no-reply@nazlicleaning.com', 'Nazli Cleaning Website');
+    $mail->addAddress($to);
+    $mail->addReplyTo($data['email'], "{$data['name']} {$data['surname']}");
+    $mail->Subject = $subject;
+    $mail->Body    = $body;
+
+    // (C) SEND
+    $mail->send();
+
+    header('Location: index.html?success=Thank+you!+We+will+be+in+touch+#contact');
+    exit;
+
+} catch (Exception $e) {
+    error_log('PHPMailer error: ' . $mail->ErrorInfo);   // log for yourself
+    header('Location: index.html#contact?server_error');
+    exit;
+}
