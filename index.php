@@ -1,0 +1,308 @@
+```php
+<?php
+// Handle form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Check honeypot field to filter spam
+    if (!empty($_POST['honeypot'])) {
+        die("Spam detected");
+    }
+
+    // Collect and sanitize form data
+    $name = filter_var($_POST['name'] ?? '', FILTER_SANITIZE_STRING);
+    $surname = filter_var($_POST['surname'] ?? '', FILTER_SANITIZE_STRING);
+    $email = filter_var($_POST['email'] ?? '', FILTER_SANITIZE_EMAIL);
+    $phone = filter_var($_POST['phone'] ?? '', FILTER_SANITIZE_STRING);
+    $info = filter_var($_POST['info'] ?? '', FILTER_SANITIZE_STRING);
+
+    // Validate required fields
+    if (empty($name) || empty($surname) || empty($email) || empty($phone) || empty($info)) {
+        $error = "All fields are required.";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = "Invalid email address.";
+    } else {
+        // Email settings
+        $to = "kazgutv@gmail.com";
+        $subject = "New Contact Form Submission from $name $surname";
+        $message = "Name: $name $surname\nEmail: $email\nPhone: $phone\nCleaning Details: $info";
+        $headers = "From: noreply@nazlicleaning.com\r\n";
+        $headers .= "Reply-To: $email\r\n";
+        $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
+
+        // Send email
+        if (mail($to, $subject, $message, $headers)) {
+            $success = "Thank you! Your submission has been sent. We'll contact you soon.";
+        } else {
+            $error = "Failed to send the email. Please try again or contact us directly at kazgutv@gmail.com.";
+        }
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nazli Cleaning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .rounded-corners {
+            border-radius: 1rem;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 50;
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 0.5rem;
+            width: 80%;
+            max-width: 600px;
+        }
+        .about-image {
+            max-width: 400px; /* Smaller image size for About section */
+            width: 100%;
+        }
+        .honeypot {
+            display: none;
+        }
+    </style>
+</head>
+<body class="font-sans">
+    <!-- Header -->
+    <header class="bg-white shadow-md fixed w-full top-0 z-40">
+        <nav class="container mx-auto px-4 py-4 flex items-center justify-between">
+            <a href="#home" class="text-2xl font-bold text-blue-600">Nazli Cleaning</a>
+            <div class="flex items-center space-x-6">
+                <a href="#about" class="text-gray-600 hover:text-blue-600">About</a>
+                <a href="#services" class="text-gray-600 hover:text-blue-600">Services</a>
+                <a href="#reviews" class="text-gray-600 hover:text-blue-600">Clients</a>
+                <a href="#payments" class="text-gray-600 hover:text-blue-600">Payments</a>
+                <a href="#contact" class="text-gray-600 hover:text-blue-600">Contact</a>
+                <button onclick="showContactInfo()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Book Now</button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="min-h-screen flex items-center pt-20">
+        <div class="container mx-auto px-4 flex flex-col md:flex-row items-center">
+            <div class="md:w-1/2 mb-8 md:mb-0">
+                <h1 class="text-4xl md:text-5xl font-bold text-blue-600 mb-4">Nazli Cleaning</h1>
+                <p class="text-xl text-gray-600 italic mb-4">"A clean home is a happy home."</p>
+                <p class="text-lg text-gray-600">Transforming spaces with spotless care.</p>
+            </div>
+            <div class="md:w-1/2">
+                <img src="https://placehold.co/600x400" alt="Clean home" class="w-full rounded-corners">
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-16 bg-gray-100">
+        <div class="container mx-auto px-4 flex flex-col md:flex-row items-center">
+            <div class="md:w-1/2 mb-8 md:mb-0 order-2 md:order-1 md:pr-10">
+                <img src="https://placehold.co/600x400" alt="Cleaning team" class="about-image rounded-corners">
+            </div>
+            <div class="md:w-1/2 order-1 md:order-2">
+                <h2 class="text-3xl font-bold text-blue-600 mb-4">About Nazli Cleaning</h2>
+                <p class="text-gray-600 mb-4">
+                    We are professional cleaners with over 7 years of experience in the market, delivering exceptional cleaning services. Our commitment to excellence ensures that 89% of our clients return and recommend us to their friends. Having served over 1,000 homes, our reputation for quality continues to grow, and we’re dedicated to making your space spotless.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="py-16">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-blue-600 mb-8 text-center">Our Services</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <img src="https://placehold.co/300x200" alt="Standard Cleaning" class="w-full rounded-corners mb-4">
+                    <h3 class="text-xl font-semibold text-blue-600 mb-2">Standard Cleaning</h3>
+                    <p class="text-gray-600">Thorough cleaning of all living spaces, including dusting, vacuuming, and surface wiping.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <img src="https://placehold.co/300x200" alt="Deep Cleaning" class="w-full rounded-corners mb-4">
+                    <h3 class="text-xl font-semibold text-blue-600 mb-2">Deep Cleaning</h3>
+                    <p class="text-gray-600">Comprehensive cleaning for every nook and cranny, perfect for move-ins or move-outs.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <img src="https://placehold.co/300x200" alt="Eco-Friendly Cleaning" class="w-full rounded-corners mb-4">
+                    <h3 class="text-xl font-semibold text-blue-600 mb-2">Eco-Friendly Cleaning</h3>
+                    <p class="text-gray-600">Sustainable cleaning using environmentally safe products for a green home.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Reviews Section -->
+    <section id="reviews" class="py-16 bg-gray-100">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-blue-600 mb-8 text-center">Client Reviews</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-md flex items-start">
+                    <img src="https://placehold.co/50x50" alt="Sarah J." class="w-12 h-12 rounded-full mr-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-blue-600">Sarah J.</h3>
+                        <p class="text-gray-600">"Nazli Cleaning transformed my home! Professional and thorough."</p>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md flex items-start">
+                    <img src="https://placehold.co/50x50" alt="Mike T." class="w-12 h-12 rounded-full mr-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-blue-600">Mike T.</h3>
+                        <p class="text-gray-600">"Amazing service! My apartment has never looked better."</p>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md flex items-start">
+                    <img src="https://placehold.co/50x50" alt="Emily R." class="w-12 h-12 rounded-full mr-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-blue-600">Emily R.</h3>
+                        <p class="text-gray-600">"Reliable and friendly team. Highly recommend!"</p>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md flex items-start">
+                    <img src="https://placehold.co/50x50" alt="James L." class="w-12 h-12 rounded-full mr-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-blue-600">James L.</h3>
+                        <p class="text-gray-600">"Eco-friendly cleaning was perfect for my family."</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Payments Section -->
+    <section id="payments" class="py-16">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-blue-600 mb-8 text-center">Payment Methods</h2>
+            <p class="text-gray-600 text-center mb-8">We accept a variety of payment methods for your convenience.</p>
+            <div class="flex justify-center space-x-6">
+                <img src="https://placehold.co/50x30" alt="Visa" class="h-10">
+                <img src="https://placehold.co/50x30" alt="Mastercard" class="h-10">
+                <img src="https://placehold.co/50x30" alt="Venmo" class="h-10">
+                <img src="https://placehold.co/50x30" alt="Zelle" class="h-10">
+                <img src="https://placehold.co/50x30" alt="CashApp" class="h-10">
+                <img src="https://placehold.co/50x30" alt="Cash" class="h-10">
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-16 bg-gray-100">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-blue-600 mb-8 text-center">Contact Us Now and Get 20% Off Your First Cleaning!</h2>
+            <?php if (isset($success)): ?>
+                <p class="text-green-600 bg-green-100 p-4 rounded-lg text-center mb-4"><?php echo htmlspecialchars($success); ?></p>
+            <?php elseif (isset($error)): ?>
+                <p class="text-red-600 bg-red-100 p-4 rounded-lg text-center mb-4"><?php echo htmlspecialchars($error); ?></p>
+            <?php endif; ?>
+            <form action="index.php#contact" method="POST" class="max-w-lg mx-auto bg-white p-8 rounded-lg shadow-md">
+                <div class="mb-4">
+                    <label class="block text-gray-600 mb-2" for="name">Name</label>
+                    <input type="text" id="name" name="name" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-600 mb-2" for="surname">Surname</label>
+                    <input type="text" id="surname" name="surname" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-600 mb-2" for="email">Email</label>
+                    <input type="email" id="email" name="email" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-600 mb-2" for="phone">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-600 mb-2" for="info">Cleaning Details</label>
+                    <textarea id="info" name="info" class="w-full p-2 border rounded" rows="4" required></textarea>
+                </div>
+                <div class="mb-4 honeypot">
+                    <label for="honeypot">Leave this field empty</label>
+                    <input type="text" id="honeypot" name="honeypot" class="honeypot">
+                </div>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">Submit</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Policies Section -->
+    <section id="policies" class="py-16">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-blue-600 mb-8 text-center">Policies</h2>
+            <div class="flex justify-center space-x-6">
+                <button onclick="showModal('privacy')" class="text-blue-600 hover:underline">Privacy Policy</button>
+                <button onclick="showModal('return')" class="text-blue-600 hover:underline">Return Policy</button>
+                <button onclick="showModal('terms')" class="text-blue-600 hover:underline">Terms and Conditions</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-lg font-semibold">Nazli Cleaning LLC</p>
+            <p class="mt-2">909 W Temple St, 824, Los Angeles, CA 90012</p>
+            <p class="mt-2">Phone: 206-489-9897 | Email: kazgutv@gmail.com</p>
+        </div>
+    </footer>
+
+    <!-- Modals -->
+    <div id="privacy-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold text-blue-600 mb-4">Privacy Policy</h2>
+            <p class="text-gray-600">We value your privacy and are committed to protecting your personal information. Any data collected (name, email, phone) is used solely for providing our cleaning services and will not be shared with third parties without your consent.</p>
+            <button onclick="closeModal('privacy')" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Close</button>
+        </div>
+    </div>
+    <div id="return-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold text-blue-600 mb-4">Return Policy</h2>
+            <p class="text-gray-600">If you are not satisfied with our cleaning services, please contact us within 24 hours, and we will arrange a re-clean at no additional cost or provide a refund based on the issue.</p>
+            <button onclick="closeModal('return')" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Close</button>
+        </div>
+    </div>
+    <div id="terms-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold text-blue-600 mb-4">Terms and Conditions</h2>
+            <p class="text-gray-600">By booking our services, you agree to provide access to the cleaning area, ensure safety for our staff, and make payments promptly. Cancellations must be made 24 hours in advance to avoid fees.</p>
+            <button onclick="closeModal('terms')" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Close</button>
+        </div>
+    </div>
+
+    <script>
+        function showContactInfo() {
+            alert("Contact us to book now!\nPhone: 206-489-9897\nEmail: kazgutv@gmail.com");
+        }
+
+        function showModal(type) {
+            document.getElementById(`${type}-modal`).style.display = 'block';
+        }
+
+        function closeModal(type) {
+            document.getElementById(`${type}-modal`).style.display = 'none';
+        }
+
+        // Smooth scrolling for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+```
