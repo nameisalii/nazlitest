@@ -164,6 +164,7 @@
             <h2 class="text-3xl font-bold text-blue-600 mb-8 text-center">Contact Us Now and Get 20% Off Your First Cleaning!</h2>
             <div id="form-message" class="hidden text-center mb-4"></div>
             <form action="process_form.php" method="POST" class="max-w-lg mx-auto bg-white p-8 rounded-lg shadow-md">
+                <input type="hidden" name="_next" value="index.html#contact">
                 <div class="mb-4">
                     <label class="block text-gray-600 mb-2" for="name">Name</label>
                     <input type="text" id="name" name="name" class="w-full p-2 border rounded" required>
@@ -271,6 +272,10 @@
             } else if (urlParams.has('error')) {
                 messageDiv.className = 'text-red-600 bg-red-100 p-4 rounded-lg text-center mb-4';
                 messageDiv.innerText = decodeURIComponent(urlParams.get('error'));
+                messageDiv.classList.remove('hidden');
+            } else if (urlParams.has('server_error')) {
+                messageDiv.className = 'text-red-600 bg-red-100 p-4 rounded-lg text-center mb-4';
+                messageDiv.innerText = 'Server error: Unable to process the form. Please try again or contact us directly at kazgutv@gmail.com.';
                 messageDiv.classList.remove('hidden');
             }
         };
