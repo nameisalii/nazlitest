@@ -1,42 +1,3 @@
-```php
-<?php
-// Handle form submission
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Check honeypot field to filter spam
-    if (!empty($_POST['honeypot'])) {
-        die("Spam detected");
-    }
-
-    // Collect and sanitize form data
-    $name = filter_var($_POST['name'] ?? '', FILTER_SANITIZE_STRING);
-    $surname = filter_var($_POST['surname'] ?? '', FILTER_SANITIZE_STRING);
-    $email = filter_var($_POST['email'] ?? '', FILTER_SANITIZE_EMAIL);
-    $phone = filter_var($_POST['phone'] ?? '', FILTER_SANITIZE_STRING);
-    $info = filter_var($_POST['info'] ?? '', FILTER_SANITIZE_STRING);
-
-    // Validate required fields
-    if (empty($name) || empty($surname) || empty($email) || empty($phone) || empty($info)) {
-        $error = "All fields are required.";
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = "Invalid email address.";
-    } else {
-        // Email settings
-        $to = "kazgutv@gmail.com";
-        $subject = "New Contact Form Submission from $name $surname";
-        $message = "Name: $name $surname\nEmail: $email\nPhone: $phone\nCleaning Details: $info";
-        $headers = "From: noreply@nazlicleaning.com\r\n";
-        $headers .= "Reply-To: $email\r\n";
-        $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-
-        // Send email
-        if (mail($to, $subject, $message, $headers)) {
-            $success = "Thank you! Your submission has been sent. We'll contact you soon.";
-        } else {
-            $error = "Failed to send the email. Please try again or contact us directly at kazgutv@gmail.com.";
-        }
-    }
-}
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -201,12 +162,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <section id="contact" class="py-16 bg-gray-100">
         <div class="container mx-auto px-4">
             <h2 class="text-3xl font-bold text-blue-600 mb-8 text-center">Contact Us Now and Get 20% Off Your First Cleaning!</h2>
-            <?php if (isset($success)): ?>
-                <p class="text-green-600 bg-green-100 p-4 rounded-lg text-center mb-4"><?php echo htmlspecialchars($success); ?></p>
-            <?php elseif (isset($error)): ?>
-                <p class="text-red-600 bg-red-100 p-4 rounded-lg text-center mb-4"><?php echo htmlspecialchars($error); ?></p>
-            <?php endif; ?>
-            <form action="index.php#contact" method="POST" class="max-w-lg mx-auto bg-white p-8 rounded-lg shadow-md">
+            <div id="form-message" class="hidden text-center mb-4"></div>
+            <form action="process_form.php" method="POST" class="max-w-lg mx-auto bg-white p-8 rounded-lg shadow-md">
                 <div class="mb-4">
                     <label class="block text-gray-600 mb-2" for="name">Name</label>
                     <input type="text" id="name" name="name" class="w-full p-2 border rounded" required>
@@ -302,7 +259,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 });
             });
         });
+
+        // Display success or error message from query parameters
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const messageDiv = document.getElementById('form-message');
+            if (urlParams.has('success')) {
+                messageDiv.className = 'text-green-600 bg-green-100 p-4 rounded-lg text-center mb-4';
+                messageDiv.innerText = decodeURIComponent(urlParams.get('success'));
+                messageDiv.classList.remove('hidden');
+            } else if (urlParams.has('error')) {
+                messageDiv.className = 'text-red-600 bg-red-100 p-4 rounded-lg text-center mb-4';
+                messageDiv.innerText = decodeURIComponent(urlParams.get('error'));
+                messageDiv.classList.remove('hidden');
+            }
+        };
     </script>
 </body>
 </html>
-```
