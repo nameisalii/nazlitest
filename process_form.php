@@ -1,9 +1,12 @@
 <?php
 // Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Get redirect URL from form or default to index.html#contact
+    $redirect_url = filter_var($_POST['_next'] ?? 'index.html#contact', FILTER_SANITIZE_URL);
+
     // Check honeypot field to filter spam
     if (!empty($_POST['honeypot'])) {
-        header("Location: index.html#contact?error=" . urlencode("Spam detected"));
+        header("Location: $redirect_url?error=" . urlencode("Spam detected"));
         exit;
     }
 
@@ -16,10 +19,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate required fields
     if (empty($name) || empty($surname) || empty($email) || empty($phone) || empty($info)) {
-        header("Location: index.html#contact?error=" . urlencode("All fields are required."));
+        header("Location: $redirect_url?error=" . urlencode("All fields are required."));
         exit;
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        header("Location: index.html#contact?error=" . urlencode("Invalid email address."));
+        header("Location: $redirect_url?error=" . urlencode("Invalid email address."));
         exit;
     }
 
@@ -33,15 +36,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Send email
     if (mail($to, $subject, $message, $headers)) {
-        header("Location: index.html#contact?success=" . urlencode("Thank you! Your submission has been sent. We'll contact you soon."));
+        header("Location: $redirect_url?success=" . urlencode("Thank you! Your submission has been sent. We'll contact you soon."));
         exit;
     } else {
-        header("Location: index.html#contact?error=" . urlencode("Failed to send the email. Please try again or contact us directly at kazgutv@gmail.com."));
+        header("Location: $redirect_url?error=" . urlencode("Failed to send the email. Please try again or contact us directly at kazgutv@gmail.com."));
         exit;
     }
 } else {
     // Redirect if accessed directly
-    header("Location: index.html#contact");
+    header("Location: index.html#contact?server_error=1");
     exit;
 }
 ?>
